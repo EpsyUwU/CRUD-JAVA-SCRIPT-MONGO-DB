@@ -3,25 +3,31 @@ var key = 'somekey234567884456753456';
 var encryptor = require('simple-encryptor')(key);
 
 module.exports.createUserDBService = (userDetails) => {
-
    return new Promise(function myFn(resolve, reject) {
-       var userModelData = new userModel();
+      userModel.findOne({ email: userDetails.email }, function checkDuplicateUser(errorvalue, result) {
+         if (errorvalue) {
+            resolve({ status: false, msg: "Fallo al registrar el usuario" });
+         } else if (result) {
+            resolve({ status: false, msg: "Este correo electrónico ya ha sido registrado" });
+         } else {
+            var userModelData = new userModel();
 
-       userModelData.firstname = userDetails.firstname;
-       userModelData.lastname = userDetails.lastname;
-       userModelData.email = userDetails.email;
-       userModelData.password = userDetails.password;
-       var encrypted = encryptor.encrypt(userDetails.password);
-       userModelData.password = encrypted;
+               userModelData.firstname = userDetails.firstname;
+               userModelData.lastname = userDetails.lastname;
+               userModelData.email = userDetails.email;
+               userModelData.password = userDetails.password;
+               var encrypted = encryptor.encrypt(userDetails.password);
+               userModelData.password = encrypted;
 
-       userModelData.save(function resultHandle(error, result) {
-
-           if (error) {
-               reject(false);
-           } else {
-               resolve(true);
-           }
-       });
+            userModelData.save(function resultHandle(errorvalue) {
+               if (errorvalue) {
+                  resolve({ status: false, msg: "Fallo al registrar el usuario" });
+               } else {
+                  resolve({ status: true, msg: "Usuario registrado con éxito" });
+               }
+            });
+         }
+      });
    });
 }
 
@@ -94,3 +100,28 @@ module.exports.deleteUserDBService = (id) => {
      });
    });
  };
+
+ module.exports.updateUserDBService = (id, userDetails) => {
+   return new Promise(function myFn(resolve, reject) {
+     userModel.findById(id, function findUser(errorvalue, user) {
+       if (errorvalue) {
+         reject({ status: false, msg: "Fallo al buscar el usuario" });
+       } else if (user) {
+         user.firstname = userDetails.firstname;
+         user.lastname = userDetails.lastname;
+         user.email = userDetails.email;
+         user.password = encryptor.encrypt(userDetails.password); // encriptar la nueva contraseña
+ 
+         user.save(function resultHandle(errorvalue) {
+           if (errorvalue) {
+             reject({ status: false, msg: "Fallo al actualizar el usuario" });
+           } else {
+             resolve({ status: true, msg: "Usuario actualizado con éxito" });
+           }
+         });
+       } else {
+         reject({ status: false, msg: "No se encontró ningún usuario con ese ID" });
+       }
+     });
+   });
+ }

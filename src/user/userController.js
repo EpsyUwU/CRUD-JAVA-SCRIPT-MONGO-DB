@@ -1,19 +1,15 @@
 var userService = require('./userServices');
 
-var createUserControllerFunc = async (req, res) =>  {
+var createUserControllerFunc = async(req, res) => {
     try {
-    console.log(req.body);
-    var status = await userService.createUserDBService(req.body);
-    console.log(status);
-
-    if (status) {
-        res.send({ "status": true, "message": "Usuario creado" });
-    } else {
-        res.send({ "status": false, "message": "Error creando usuario" });
-    }
-    }
-    catch(err) {
-        console.log(err);
+        var result = await userService.createUserDBService(req.body);
+        if (result.status) {
+            res.send({ "status": true, "message": result.msg });
+        } else {
+            res.send({ "status": false, "message": result.msg });
+        }
+    } catch (error) {
+        console.log(error);
     }
 }
 
@@ -76,6 +72,23 @@ var deleteUserControllerFunc = async(req, res) => {
     }
   }
 
+  var updateUserControllerFunc = async (req, res) => {
+    try {
+        const userId = req.params.id;
+        const updateDetails = req.body;
+        const result = await userService.updateUserDBService(userId, updateDetails);
+        if (result) {
+            res.send({ "status": true, "message": "Usuario actualizado correctamente" });
+            console.log(result);
+        } else {
+            res.send({ "status": false, "message": "Error al actualizar el usuario" });
+        }
+    } catch (error) {
+        console.log(error);
+        res.send({ "status": false, "message": "Error al actualizar el usuario" });
+    }
+}
 
 
-module.exports = { createUserControllerFunc, loginUserControllerFunc, allUserControllerFunc,oneUSerControllerFunc, deleteUserControllerFunc };
+
+module.exports = { createUserControllerFunc, loginUserControllerFunc, allUserControllerFunc,oneUSerControllerFunc, deleteUserControllerFunc,updateUserControllerFunc };
